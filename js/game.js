@@ -236,7 +236,7 @@ export function createGame(canvas, { onGameOver } = {}) {
     spawnCount++;
     const coal = spawnCount > 2 && Math.random() < 0.2;
     const gold = !coal && spawnCount % 8 === 0;
-    const speed = (150 + Math.min(score * 5, 230)) * (0.92 + Math.random() * 0.16);
+    const speed = (150 + Math.min(score * 5, 700)) * (0.92 + Math.random() * 0.16);
     items.push({
       x: 14 + Math.random() * (W - 28 - SIZE),
       y: -SIZE,
