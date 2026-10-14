@@ -362,7 +362,7 @@ async function familyView(fid, rid) {
     el("a", { class: "back", href: "#/families", text: "Retour aux familles" }),
     el("h1", { text: `${fam.name} – Mes membres` }),
     el("div", { class: "tiles" }, members.map((m) =>
-      el("a", { class: "tile", href: `#/list/${m.id}`, title: fullName(m) }, avatarImg(m.avatar, "avatar", m.id), el("span", { class: "label tag", text: label(m) })))),
+      el("a", { class: "tile", href: `#/list/${m.id}`, title: fullName(m) }, avatarImg(m.avatar, "", m.id), el("span", { class: "label tag", text: label(m) })))),
     el("p", { class: "code-box" }, "Code d'invitation : ", el("strong", { text: prettyCode }), " ", el("button", { type: "button", class: "small ghost", text: "Copier", onclick: copy })),
     el("div", { class: "actions" }, leave, del));
 }
