@@ -68,14 +68,32 @@ function hashStr(s) {
   return h;
 }
 
-function avatarImg(name, cls = "avatar") {
+function avatarColor(seed) {
+  let h = hashStr(String(seed));
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  h = (h ^ (h >>> 16)) >>> 0;
+  return `hsl(${h % 360}, 62%, 44%)`;
+}
+
+function avatarImg(name, cls = "avatar", seed = null) {
   const img = el("img", { class: cls, alt: "", loading: "lazy", src: `assets/avatars/${encodeURIComponent(name || AVATARS_FAM[0])}` });
+  if (seed) img.style.backgroundColor = avatarColor(seed);
   img.addEventListener("error", () => {
     img.onerror = null;
     img.src = `assets/avatars/${encodeURIComponent(AVATARS_FAM[0])}`;
   }, { once: true });
   return img;
 }
+
+// function avatarImg(name, cls = "avatar") {
+//   const img = el("img", { class: cls, alt: "", loading: "lazy", src: `assets/avatars/${encodeURIComponent(name || AVATARS_FAM[0])}` });
+//   img.addEventListener("error", () => {
+//     img.onerror = null;
+//     img.src = `assets/avatars/${encodeURIComponent(AVATARS_FAM[0])}`;
+//   }, { once: true });
+//   return img;
+// }
 
 function toast(msg) {
   toastEl.textContent = msg;
@@ -344,7 +362,7 @@ async function familyView(fid, rid) {
     el("a", { class: "back", href: "#/families", text: "Retour aux familles" }),
     el("h1", { text: `${fam.name} – Mes membres` }),
     el("div", { class: "tiles" }, members.map((m) =>
-      el("a", { class: "tile", href: `#/list/${m.id}`, title: fullName(m) }, avatarImg(m.avatar), el("span", { class: "label tag", text: label(m) })))),
+      el("a", { class: "tile", href: `#/list/${m.id}`, title: fullName(m) }, avatarImg((m.avatar, "avatar", m.id)), el("span", { class: "label tag", text: label(m) })))),
     el("p", { class: "code-box" }, "Code d'invitation : ", el("strong", { text: prettyCode }), " ", el("button", { type: "button", class: "small ghost", text: "Copier", onclick: copy })),
     el("div", { class: "actions" }, leave, del));
 }
