@@ -16,6 +16,8 @@ Site de gestion des cadeaux de Noël : chacun écrit sa liste, les proches la co
 | Familles | Créer une famille (code d'invitation généré) ou en rejoindre une avec un code |
 | Liste d'un membre | Souhaits + suggestions, bouton de réservation (marque « Déjà pris par … ») |
 | Suggestions | Ajoutées par un autre membre, invisibles du propriétaire de la liste |
+| Mini-jeu « Attrape-cadeaux » | Onglet manette : attrape les cadeaux avec le traîneau du Père Noël, évite le charbon |
+| Classement | Meilleur score de chacun, parmi tous les membres de toutes tes familles (filtrable par famille) |
 
 **Secret garanti côté serveur** : les règles de sécurité (RLS) de `supabase/schema.sql` empêchent la base de renvoyer réservations et suggestions au propriétaire de la liste, même s'il ouvre les outils du navigateur.
 
@@ -72,6 +74,18 @@ Le plan gratuit met le projet en pause après 7 jours sans activité. Le workflo
 
 ---
 
+## Le mini-jeu « Attrape-cadeaux »
+
+- **Contrôles** : glisser le doigt (mobile), souris, ou flèches ← → du clavier (touches A/Q et D aussi). Espace ou clic pour démarrer.
+- **Règles** : cadeau attrapé = +1 point, cadeau doré = +3 points. Un cadeau qui touche le sol ou un morceau de charbon attrapé = une vie en moins (3 vies). La vitesse augmente avec le score.
+- **Classement** : chacun a un meilleur score. Le classement regroupe les membres de toutes tes familles ; le menu déroulant permet de se limiter à une famille.
+- **Triche** : le jeu tourne dans le navigateur, donc un joueur déterminé pourrait envoyer un faux score. La base refuse les scores impossibles par rapport à la durée de la partie (plus de 3 points par seconde), ce qui suffit pour un jeu de famille. Une protection complète demanderait de rejouer chaque partie côté serveur.
+- **Remettre les scores à zéro** (par exemple après Noël) : dans Supabase → SQL Editor, `delete from public.scores;`
+
+### Si tu avais déjà installé la première version
+
+Relance **tout** le fichier `supabase/schema.sql` dans le SQL Editor de Supabase : il est conçu pour être relancé sans danger et ne touche pas aux données existantes. Il ajoute la table `scores` et les fonctions du classement. Ensuite, remplace les fichiers du site sur GitHub par les nouveaux (le dossier `js/`, `css/` et `index.html`) ; garde ton `js/config.js` renseigné.
+
 ## Gérer les mots de passe oubliés (tu es l'administrateur)
 
 Il n'y a pas d'email, donc c'est toi qui réinitialises :
@@ -94,7 +108,8 @@ Il n'y a pas d'email, donc c'est toi qui réinitialises :
 index.html              page unique (navigation par #/...)
 css/style.css           thème nuit étoilée
 js/config.js            URL Supabase, clé publique, avatars
-js/app.js               toute la logique
+js/app.js               toute la logique du site
+js/game.js              le mini-jeu Attrape-cadeaux (canvas)
 assets/avatars/         images d'avatars
 supabase/schema.sql     tables + sécurité + fonctions
 supabase/reset_password.sql   réinitialiser un mot de passe

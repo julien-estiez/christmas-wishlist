@@ -1,5 +1,6 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 import { SUPABASE_URL, SUPABASE_ANON_KEY, EMAIL_DOMAIN, AVATARS } from "./config.js";
+import { createGame } from "./game.js";
 
 /* =====================================================================
    Noël en famille — application (HTML + JS, sans build)
@@ -17,6 +18,7 @@ const toastEl = document.getElementById("toast");
 let session = null;
 let me = null; // { id, prenom, nom, avatar }
 let renderId = 0;
+let activeGame = null; // partie en cours (arrêtée quand on change d'écran)
 
 /* ---------- Petits utilitaires ---------- */
 
@@ -90,6 +92,7 @@ function errMsg(e) {
   if (/already registered|already been registered/i.test(m)) return "Un compte existe déjà avec ce nom et ce prénom.";
   if (/Password should be at least/i.test(m)) return "Le mot de passe doit contenir au moins 6 caractères.";
   if (/Failed to fetch|NetworkError/i.test(m)) return "Connexion impossible. Vérifie ta connexion internet.";
+  if (/schema cache|submit_score|get_leaderboard|public\.scores/i.test(m)) return "Le mini-jeu n'est pas encore installé dans Supabase : relance le fichier supabase/schema.sql (voir le README).";
   return m;
 }
 
@@ -462,6 +465,84 @@ async function listView(param, rid) {
     isMe ? null : section("Suggestions", suggestions, "Aucune suggestion pour le moment."));
 }
 
+async function gameView(rid) {
+  const [famRes, bestRes] = await Promise.all([
+    sb.from("family_members").select("families(id, name)").eq("user_id", me.id),
+    sb.from("scores").select("best_score").eq("user_id", me.id).maybeSingle(),
+  ]);
+  if (rid !== renderId) return;
+  if (famRes.error) throw famRes.error;
+  if (bestRes.error) throw bestRes.error;
+  const fams = (famRes.data || []).map((r) => r.families).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  let best = bestRes.data?.best_score || 0;
+  let filter = "";
+  let boardSeq = 0;
+
+  const bestEl = el("span", { class: "best" });
+  const renderBest = () => bestEl.replaceChildren("Meilleur score : ", el("strong", { text: String(best) }));
+  renderBest();
+
+  const canvas = el("canvas", { class: "game-canvas", tabindex: "0", role: "img", "aria-label": "Attrape-cadeaux : déplace le traîneau pour attraper les cadeaux" });
+  const boardList = el("div");
+
+  async function loadBoard() {
+    const seq = ++boardSeq;
+    const { data, error } = await sb.rpc("get_leaderboard", { p_family: filter || null });
+    if (seq !== boardSeq) return;
+    if (error) { boardList.replaceChildren(el("p", { class: "error", text: errMsg(error) })); return; }
+    const rows = data || [];
+    if (!rows.length) {
+      boardList.replaceChildren(el("p", { class: "empty", text: "Aucun score pour l'instant. Sois le premier !" }));
+      return;
+    }
+    const count = {};
+    rows.forEach((r) => { const k = r.prenom.toLowerCase(); count[k] = (count[k] || 0) + 1; });
+    const medals = { 1: "🥇", 2: "🥈", 3: "🥉" };
+    boardList.replaceChildren(el("ol", { class: "lb" }, rows.map((r) => {
+      const isMe = r.user_id === me.id;
+      let name = count[r.prenom.toLowerCase()] > 1 ? `${r.prenom} ${r.nom.charAt(0).toUpperCase()}.` : r.prenom;
+      if (isMe) name += " (toi)";
+      return el("li", { class: isMe ? "me" : "" },
+        el("span", { class: "rank", text: medals[r.rank] || String(r.rank) }),
+        avatarImg(r.avatar, ""),
+        el("span", { class: "who", text: name, title: fullName(r) }),
+        el("span", { class: "pts", text: String(r.best_score) }));
+    })));
+  }
+
+  const select = el("select", { "aria-label": "Filtrer le classement", onchange: () => { filter = select.value; loadBoard(); } },
+    el("option", { value: "", text: "Toutes mes familles" }),
+    fams.map((f) => el("option", { value: f.id, text: f.name })));
+
+  const playBtn = el("button", { type: "button", class: "small", text: "Jouer", onclick: () => {
+    activeGame?.start();
+    canvas.focus({ preventScroll: true });
+  } });
+
+  setView(
+    el("h1", { text: "Attrape-cadeaux" }),
+    el("div", { class: "game-wrap" },
+      el("div", { class: "game-bar" }, bestEl, playBtn),
+      canvas),
+    el("div", { class: "card board" },
+      el("h2", { text: "Classement" }),
+      el("label", {}, el("span", { class: "sr-only", text: "Famille" }), select),
+      boardList));
+
+  activeGame = createGame(canvas, {
+    onGameOver: async ({ score, durationMs }) => {
+      if (score <= 0) return;
+      const { data, error } = await sb.rpc("submit_score", { p_score: score, p_duration_ms: durationMs });
+      if (error) return toast(errMsg(error));
+      if (score > best) toast(`Nouveau record : ${score} ! 🏆`);
+      best = data;
+      renderBest();
+      loadBoard();
+    },
+  });
+  loadBoard();
+}
+
 async function profileView() {
   let chosen = me.avatar;
   const err = el("p", { class: "error" });
@@ -517,6 +598,7 @@ function highlightTab(path) {
 
 async function route() {
   const rid = ++renderId;
+  if (activeGame) { activeGame.destroy(); activeGame = null; }
   if (!configured) { tabbar.hidden = true; return setupView(); }
 
   const m = (location.hash || "#/home").match(/^#\/([^/]*)\/?(.*)$/) || [];
@@ -538,6 +620,7 @@ async function route() {
     else if (path === "families") await familiesView(rid);
     else if (path === "family") await familyView(param, rid);
     else if (path === "list") await listView(param || "me", rid);
+    else if (path === "game") await gameView(rid);
     else if (path === "profile") await profileView();
     else location.hash = "#/home";
   } catch (e) {

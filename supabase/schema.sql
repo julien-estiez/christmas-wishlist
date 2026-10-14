@@ -313,3 +313,92 @@ grant execute on function public.gift_owner(uuid)           to authenticated;
 grant execute on function public.create_family(text)        to authenticated;
 grant execute on function public.join_family(text)          to authenticated;
 grant execute on function public.get_list(uuid)             to authenticated;
+
+-- =====================================================================
+--  7. MINI-JEU « Attrape-cadeaux » : meilleurs scores + classement
+--     (section ajoutée après la première version : relancer tout le fichier est sans danger)
+-- =====================================================================
+
+create table if not exists public.scores (
+  user_id       uuid primary key references public.profiles(id) on delete cascade,
+  best_score    int  not null default 0 check (best_score between 0 and 10000),
+  games_played  int  not null default 0,
+  updated_at    timestamptz not null default now()
+);
+
+alter table public.scores enable row level security;
+
+-- Lecture directe : uniquement son propre score. Écriture : uniquement via submit_score().
+drop policy if exists scores_select on public.scores;
+create policy scores_select on public.scores for select to authenticated
+  using (user_id = auth.uid());
+revoke insert, update, delete on public.scores from authenticated, anon;
+
+-- Enregistre une partie et conserve le meilleur score.
+-- Le jeu rapporte un score et la durée de jeu ; un score impossible vu la durée est refusé
+-- (le jeu fait tomber au maximum environ 2,3 points par seconde).
+create or replace function public.submit_score(p_score int, p_duration_ms int)
+returns int language plpgsql security definer set search_path = public as $$
+declare
+  best int;
+  secs numeric;
+begin
+  if auth.uid() is null then raise exception 'Non authentifié'; end if;
+  if p_score is null or p_score < 0 or p_duration_ms is null or p_duration_ms < 0 then
+    raise exception 'Score invalide';
+  end if;
+  secs := least(p_duration_ms, 1800000) / 1000.0;      -- 30 min maximum prises en compte
+  if p_score > 3 + secs * 3 then
+    raise exception 'Score invalide';
+  end if;
+
+  insert into public.scores (user_id, best_score, games_played)
+  values (auth.uid(), p_score, 1)
+  on conflict (user_id) do update
+    set best_score   = greatest(public.scores.best_score, excluded.best_score),
+        games_played = public.scores.games_played + 1,
+        updated_at   = now()
+  returning public.scores.best_score into best;
+
+  return best;
+end;
+$$;
+
+-- Classement : p_family NULL -> toutes mes familles ; sinon une famille dont je suis membre.
+create or replace function public.get_leaderboard(p_family uuid default null)
+returns table (
+  user_id    uuid,
+  prenom     text,
+  nom        text,
+  avatar     text,
+  best_score int,
+  rank       bigint
+) language plpgsql security definer stable set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Non authentifié'; end if;
+  if p_family is not null and not public.is_family_member(p_family) then
+    raise exception 'Accès refusé';
+  end if;
+
+  return query
+    select s.user_id, p.prenom, p.nom, p.avatar, s.best_score,
+           rank() over (order by s.best_score desc)
+    from public.scores s
+    join public.profiles p on p.id = s.user_id
+    where s.best_score > 0
+      and (
+        case when p_family is null
+          then (s.user_id = auth.uid() or public.shares_family(s.user_id, auth.uid()))
+          else exists (select 1 from public.family_members m
+                       where m.family_id = p_family and m.user_id = s.user_id)
+        end
+      )
+    order by s.best_score desc, p.prenom
+    limit 100;
+end;
+$$;
+
+revoke all on function public.submit_score(int, int)   from public, anon;
+revoke all on function public.get_leaderboard(uuid)    from public, anon;
+grant execute on function public.submit_score(int, int) to authenticated;
+grant execute on function public.get_leaderboard(uuid)  to authenticated;

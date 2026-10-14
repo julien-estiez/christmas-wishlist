@@ -161,7 +161,7 @@ dialog .row { display: flex; gap: 10px; justify-content: flex-end; }
   height: 64px; background: rgba(15, 15, 22, 0.92); border-top: 1px solid rgba(255,255,255,.15);
 }
 #tabbar[hidden] { display: none; }
-#tabbar a { color: #fff; padding: 12px 28px; border-radius: 12px; opacity: .65; line-height: 0; }
+#tabbar a { color: #fff; padding: 12px 20px; border-radius: 12px; opacity: .65; line-height: 0; }
 #tabbar a.active { opacity: 1; background: rgba(255,255,255,.1); }
 
 #toast {
@@ -170,6 +170,32 @@ dialog .row { display: flex; gap: 10px; justify-content: flex-end; }
   opacity: 0; pointer-events: none; transition: all .25s; z-index: 20; max-width: 90vw; text-align: center;
 }
 #toast.show { opacity: 1; transform: translateX(-50%); }
+
+/* Mini-jeu */
+.game-wrap { max-width: 380px; margin: 0 auto; }
+.game-canvas {
+  display: block; width: 100%; height: auto; aspect-ratio: 360 / 560;
+  border-radius: 14px; border: 2px solid rgba(255,255,255,.3);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+  cursor: pointer; outline: none; background: #14141c;
+}
+.game-canvas:focus-visible { border-color: #fff; }
+.game-bar { display: flex; justify-content: space-between; align-items: center; margin: 0 0 10px; gap: 10px; }
+.game-bar .best strong { color: #ffd34a; font-weight: 400; font-size: 1.3rem; }
+
+.board { max-width: 520px; margin: 28px auto 0; }
+.board h2 { margin-top: 0; text-align: center; }
+.board select {
+  font-family: var(--font); font-size: 1rem; color: #fff; background: rgba(0,0,0,.5);
+  border: 1px solid rgba(255,255,255,.35); border-radius: 10px; padding: 8px 10px; width: 100%; margin: 6px 0 14px;
+}
+.lb { list-style: none; margin: 0; padding: 0; }
+.lb li { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-bottom: 1px dotted rgba(255,255,255,.6); }
+.lb li.me { background: rgba(255, 211, 74, .15); border-radius: 8px; }
+.lb .rank { width: 2.2em; text-align: center; font-size: 1.15rem; flex-shrink: 0; }
+.lb img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #333; flex-shrink: 0; }
+.lb .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb .pts { font-size: 1.25rem; color: #ffd34a; }
 
 .loading { text-align: center; margin-top: 60px; color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
