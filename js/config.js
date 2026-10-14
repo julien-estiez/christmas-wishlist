@@ -11,9 +11,9 @@ export const EMAIL_DOMAIN = "noel-famille.app";
 // Avatars proposés à l'inscription : fichiers du dossier assets/avatars/
 // Remplace les .png d'exemple par tes images d'elfes (png, jpg, png, webp…) et mets leurs noms ici.
 export const AVATARS = [
-  "elf-01.png", "elf-02.png", "elf-03.png", "elf-04.png",
-  "elf-05.png", "elf-06.png", "elf-07.png", "elf-08.png",
-  "elf-09.png", "elf-10.png"
+  "elf-1.png", "elf-2.png", "elf-3.png", "elf-4.png",
+  "elf-5.png", "elf-6.png", "elf-7.png", "elf-8.png",
+  "elf-9.png", "elf-10.png"
 ];
 
 export const AVATARS_FAM = [
