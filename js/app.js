@@ -1,5 +1,5 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY, EMAIL_DOMAIN, AVATARS } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, EMAIL_DOMAIN, AVATARS, AVATARS_FAM } from "./config.js";
 import { createGame } from "./game.js";
 
 /* =====================================================================
@@ -168,7 +168,8 @@ async function loadMe() {
   me = data;
 }
 
-function pickAvatarFor(id) { return AVATARS[hashStr(id) % AVATARS.length]; }
+function pickAvatarFor(id) { return AVATARS_FAM[hashStr(id) % AVATARS_FAM.length]; }
+
 
 /* ---------- Vues ---------- */
 
