@@ -69,10 +69,10 @@ function hashStr(s) {
 }
 
 function avatarImg(name, cls = "avatar") {
-  const img = el("img", { class: cls, alt: "", loading: "lazy", src: `assets/avatars/${encodeURIComponent(name || AVATARS[0])}` });
+  const img = el("img", { class: cls, alt: "", loading: "lazy", src: `assets/avatars/${encodeURIComponent(name || AVATARS_FAM[0])}` });
   img.addEventListener("error", () => {
     img.onerror = null;
-    img.src = `assets/avatars/${encodeURIComponent(AVATARS[0])}`;
+    img.src = `assets/avatars/${encodeURIComponent(AVATARS_FAM[0])}`;
   }, { once: true });
   return img;
 }
