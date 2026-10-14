@@ -9,9 +9,15 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 export const EMAIL_DOMAIN = "noel-famille.app";
 
 // Avatars proposés à l'inscription : fichiers du dossier assets/avatars/
-// Remplace les .svg d'exemple par tes images d'elfes (png, jpg, svg, webp…) et mets leurs noms ici.
+// Remplace les .png d'exemple par tes images d'elfes (png, jpg, png, webp…) et mets leurs noms ici.
 export const AVATARS = [
+  "elf-01.png", "elf-02.png", "elf-03.png", "elf-04.png",
+  "elf-05.png", "elf-06.png", "elf-07.png", "elf-08.png",
+  "elf-09.png", "elf-10.png"
+];
+
+export const AVATARS_FAM = [
   "elf-01.svg", "elf-02.svg", "elf-03.svg", "elf-04.svg",
   "elf-05.svg", "elf-06.svg", "elf-07.svg", "elf-08.svg",
-  "elf-09.svg", "elf-10.svg", "elf-11.svg", "elf-13.png",
+  "elf-09.svg", "elf-10.svg"
 ];
