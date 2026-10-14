@@ -13,5 +13,5 @@ export const EMAIL_DOMAIN = "noel-famille.app";
 export const AVATARS = [
   "elf-01.svg", "elf-02.svg", "elf-03.svg", "elf-04.svg",
   "elf-05.svg", "elf-06.svg", "elf-07.svg", "elf-08.svg",
-  "elf-09.svg", "elf-10.svg", "elf-11.svg", "elf-12.svg",
+  "elf-09.svg", "elf-10.svg", "elf-11.svg", "elf-13.png",
 ];
